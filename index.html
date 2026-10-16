@@ -34,26 +34,28 @@
   }
   #modes { display: flex; gap: 10px; }
   .mode {
+    opacity: 0.4;
     flex: 1; padding: 6px 0; font-size: 1rem; font-weight: 400;
     background: var(--card); color: var(--text);
-    border: 1.5px solid var(--border); border-radius: 9px;
+    border: 1.5px solid var(--border); border-radius: 6px;
   }
-  .mode.active { background: #f2f4f7; border-color: #f2f4f7; color: #111; }
+  .mode.active { opacity: 1; background: #2a1015; border-color: var(--accent); }
   #center {
     flex: 1; display: flex; flex-direction: column;
     justify-content: center; align-items: center; gap: 18px;
   }
   #num {
     font-family: inherit;
-    width: 100%; max-width: 270px; height: 240px; padding: 0 10px;
-    font-size: 6.5rem; text-align: center;
+    width: 100%; max-width: 220px; padding: 28px 10px;
+    font-size: 2.4rem; text-align: center;
     background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 24px; outline: none;
+    border: 2px solid var(--border); border-radius: 6px; outline: none;
   }
   #num:focus { border-color: var(--accent); }
   #go {
-    padding: 4px 36px; font-size: 3rem; letter-spacing: 0.12em;
-    background: transparent; color: var(--accent); border: none;
+    width: 100%; max-width: 220px; padding: 18px 0;
+    font-size: 1.6rem; letter-spacing: 0.08em;
+    background: var(--accent); color: #fff; border: none; border-radius: 6px;
   }
   #err { min-height: 1.2em; color: #ff7a7a; font-size: 1rem; text-align: center; }
   /* Hidden menu: three faint dots in the bottom-right corner */
@@ -72,19 +74,19 @@
   #lock.show { display: flex; }
   #lockBox {
     width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 12px;
-    background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 20px;
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 6px; padding: 20px;
   }
   #lockTitle { text-align: center; font-size: 1.1rem; }
   #lockInput {
     width: 100%; padding: 14px 10px; font-size: 1.6rem; text-align: center; letter-spacing: 0.3em;
     font-family: inherit; background: var(--bg); color: var(--text);
-    border: 1.5px solid var(--border); border-radius: 12px; outline: none;
+    border: 1.5px solid var(--border); border-radius: 6px; outline: none;
   }
   #lockInput:focus { border-color: var(--accent); }
   #lockMsg { min-height: 1.2em; text-align: center; color: #ff7a7a; font-size: .9rem; }
   #lockBar { display: flex; gap: 10px; }
   #lockCancel, #lockOk {
-    flex: 1; padding: 12px 0; font-size: 1rem; border-radius: 10px;
+    flex: 1; padding: 12px 0; font-size: 1rem; border-radius: 6px;
     border: 1.5px solid var(--border); background: var(--bg); color: var(--text);
   }
   #lockOk { background: var(--accent); border-color: var(--accent); color: #fff; }
@@ -104,7 +106,7 @@
     position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px;
     width: 52px; height: 52px; font-size: 1.8rem; line-height: 1;
     background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 50%;
+    border: 2px solid var(--border); border-radius: 6px;
   }
   #tag {
     position: absolute; top: calc(26px + env(safe-area-inset-top)); left: 20px;
@@ -125,25 +127,25 @@
   .etab {
     flex: 1; padding: 12px 0; font-size: 1.1rem; font-weight: 600;
     background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 12px;
+    border: 2px solid var(--border); border-radius: 6px;
   }
   .etab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
   #lines {
     flex: 1; width: 100%; padding: 14px; font-size: 1.05rem; line-height: 1.5;
     background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 14px; outline: none; resize: none;
+    border: 2px solid var(--border); border-radius: 6px; outline: none; resize: none;
   }
   #lines:focus { border-color: var(--accent); }
   #count { color: var(--muted); font-size: .95rem; }
   #editBar { display: flex; gap: 10px; }
   #saveBtn {
     flex: 2; padding: 16px 0; font-size: 1.2rem; font-weight: 700;
-    background: var(--accent); color: #fff; border: none; border-radius: 12px;
+    background: var(--accent); color: #fff; border: none; border-radius: 6px;
   }
   #cancelBtn {
     flex: 1; padding: 16px 0; font-size: 1.1rem;
     background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 12px;
+    border: 2px solid var(--border); border-radius: 6px;
   }
 </style>
 </head>
