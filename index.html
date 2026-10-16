@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Phrases">
+<meta name="apple-mobile-web-app-title" content="Jenga">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Phrases</title>
+<title>Jenga</title>
 <style>
   :root {
     --bg: #111418;
@@ -34,34 +34,60 @@
   }
   #modes { display: flex; gap: 10px; }
   .mode {
-    flex: 1; padding: 18px 0; font-size: 1.3rem; font-weight: 600;
+    flex: 1; padding: 6px 0; font-size: 1rem; font-weight: 400;
     background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 14px;
+    border: 1.5px solid var(--border); border-radius: 9px;
   }
-  .mode.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .mode.active { background: #f2f4f7; border-color: #f2f4f7; color: #111; }
   #center {
     flex: 1; display: flex; flex-direction: column;
     justify-content: center; align-items: center; gap: 18px;
   }
   #num {
     font-family: inherit;
-    width: 100%; max-width: 220px; padding: 28px 10px;
-    font-size: 2.4rem; text-align: center;
+    width: 100%; max-width: 270px; height: 240px; padding: 0 10px;
+    font-size: 6.5rem; text-align: center;
     background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 18px; outline: none;
+    border: 2px solid var(--border); border-radius: 24px; outline: none;
   }
   #num:focus { border-color: var(--accent); }
   #go {
-    width: 100%; max-width: 220px; padding: 18px 0;
-    font-size: 1.4rem; font-weight: 700;
-    background: var(--accent); color: #fff; border: none; border-radius: 14px;
+    padding: 4px 36px; font-size: 3rem; letter-spacing: 0.12em;
+    background: transparent; color: var(--accent); border: none;
   }
   #err { min-height: 1.2em; color: #ff7a7a; font-size: 1rem; text-align: center; }
-  #editBtn {
-    align-self: center; padding: 10px 18px; font-size: 1rem;
-    background: transparent; color: var(--muted);
-    border: 1px solid var(--border); border-radius: 10px;
+  /* Hidden menu: three faint dots in the bottom-right corner */
+  #dots {
+    position: fixed; right: calc(6px + env(safe-area-inset-right));
+    bottom: calc(6px + env(safe-area-inset-bottom));
+    padding: 12px 16px; font-size: 1.6rem; line-height: 1;
+    background: transparent; color: #3a424d; border: none;
   }
+
+  /* ---------- Code lock ---------- */
+  #lock {
+    position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.85);
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  #lock.show { display: flex; }
+  #lockBox {
+    width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 12px;
+    background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; padding: 20px;
+  }
+  #lockTitle { text-align: center; font-size: 1.1rem; }
+  #lockInput {
+    width: 100%; padding: 14px 10px; font-size: 1.6rem; text-align: center; letter-spacing: 0.3em;
+    font-family: inherit; background: var(--bg); color: var(--text);
+    border: 1.5px solid var(--border); border-radius: 12px; outline: none;
+  }
+  #lockInput:focus { border-color: var(--accent); }
+  #lockMsg { min-height: 1.2em; text-align: center; color: #ff7a7a; font-size: .9rem; }
+  #lockBar { display: flex; gap: 10px; }
+  #lockCancel, #lockOk {
+    flex: 1; padding: 12px 0; font-size: 1rem; border-radius: 10px;
+    border: 1.5px solid var(--border); background: var(--bg); color: var(--text);
+  }
+  #lockOk { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   /* ---------- Full-screen phrase ---------- */
   #overlay {
@@ -127,10 +153,22 @@
   <div id="modes"></div>
   <div id="center">
     <input id="num" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off">
-    <button id="go">Go</button>
+    <button id="go">GO</button>
     <div id="err"></div>
   </div>
-  <button id="editBtn">Edit phrases</button>
+  <button id="dots" aria-label="Menu">•••</button>
+</div>
+
+<div id="lock">
+  <div id="lockBox">
+    <div id="lockTitle"></div>
+    <input id="lockInput" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+    <div id="lockMsg"></div>
+    <div id="lockBar">
+      <button id="lockCancel">Cancel</button>
+      <button id="lockOk">OK</button>
+    </div>
+  </div>
 </div>
 
 <div id="overlay">
@@ -153,7 +191,7 @@
 
 <script>
 /* Mode names. Change these if you like (keep the list short enough to fit on one row). */
-const MODE_NAMES = ["Mild", "Spicy", "Inferno"];
+const MODE_NAMES = ["🌶️", "🌶️🌶️", "🌶️🌶️🌶️"];
 const MAX = 54;
 const KEY = "phrases-v1";
 
@@ -205,7 +243,7 @@ function go() {
   }
   const list = data[current];
   if (!list.length) {
-    errEl.textContent = "No phrases in " + MODE_NAMES[current] + " yet. Tap Edit phrases.";
+    errEl.textContent = "No phrases in " + MODE_NAMES[current] + " yet.";
     return;
   }
   const text = (list[n - 1] || "").trim();
@@ -254,14 +292,57 @@ MODE_NAMES.forEach((name, i) => {
 });
 linesEl.addEventListener("input", updateCount);
 
-$("editBtn").onclick = () => {
+function openEditor() {
   draft = data.map(list => list.join("\n"));
   editing = current;
   linesEl.value = draft[editing];
   [...editTabs.children].forEach((c, j) => c.classList.toggle("active", j === editing));
   updateCount();
   editor.classList.add("show");
-};
+}
+
+/* ---------- code lock ----------
+   The code is not written in plain text here, only its fingerprint (hash). */
+const CODE_HASHES = ["59492ad92dbcb5f34317779b9051ae46a1a067aa9d55561c4f927a69604d809f", "x24290959"];
+const lockEl = $("lock"), lockTitle = $("lockTitle"), lockInput = $("lockInput"), lockMsg = $("lockMsg");
+
+async function hashCode(s) {
+  const text = "jenga-salt:" + s;
+  try {
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+    return [...new Uint8Array(buf)].map(x => x.toString(16).padStart(2, "0")).join("");
+  } catch (e) {
+    let h = 0;
+    for (const c of text) h = (h * 31 + c.charCodeAt(0)) | 0;
+    return "x" + h;
+  }
+}
+function openLock() {
+  lockTitle.textContent = "Enter code";
+  lockInput.value = "";
+  lockMsg.textContent = "";
+  lockEl.classList.add("show");
+  setTimeout(() => lockInput.focus(), 50);
+}
+function closeLock() {
+  lockEl.classList.remove("show");
+  lockInput.blur();
+  lockInput.value = "";
+}
+async function submitLock() {
+  if (CODE_HASHES.includes(await hashCode(lockInput.value))) {
+    closeLock();
+    openEditor();
+  } else {
+    lockMsg.textContent = "Wrong code";
+    lockInput.value = "";
+  }
+}
+$("dots").onclick = openLock;
+$("lockCancel").onclick = closeLock;
+$("lockOk").onclick = submitLock;
+lockInput.addEventListener("input", () => { lockInput.value = lockInput.value.replace(/\D/g, ""); });
+lockInput.addEventListener("keydown", e => { if (e.key === "Enter") submitLock(); });
 $("cancelBtn").onclick = () => editor.classList.remove("show");
 $("saveBtn").onclick = () => {
   draft[editing] = linesEl.value;
