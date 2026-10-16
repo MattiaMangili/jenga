@@ -21,7 +21,7 @@
   html, body {
     margin: 0; height: 100%;
     background: var(--bg); color: var(--text);
-    font-family: Impact, sans-serif; letter-spacing: 0.02em;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Courier New", monospace; letter-spacing: 0.02em;
   }
   button { font-family: inherit; }
 
@@ -66,45 +66,50 @@
     background: transparent; color: #3a424d; border: none;
   }
 
+  /* ---------- Shared minimal bits ---------- */
+  .xbtn {
+    position: absolute; top: calc(10px + env(safe-area-inset-top)); right: 6px;
+    padding: 10px 14px; font-size: 1.6rem; line-height: 1;
+    background: transparent; color: var(--muted); border: none;
+  }
+  .prompt {
+    display: flex; align-items: center; gap: 12px; padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .prompt span { color: var(--accent); font-size: 1.6rem; }
+  .prompt input {
+    width: 9ch; padding: 0; font-size: 1.8rem; letter-spacing: 0.5em;
+    font-family: inherit; background: transparent; color: var(--text);
+    border: none; outline: none; border-radius: 0;
+  }
+  .textbtn {
+    padding: 10px 24px; font-size: 1rem; letter-spacing: 0.3em;
+    background: transparent; color: var(--accent); border: none;
+  }
+  .label {
+    font-size: .85rem; letter-spacing: 0.35em; text-transform: uppercase; color: var(--muted);
+  }
+
   /* ---------- Code lock ---------- */
   #lock {
-    position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.85);
+    position: fixed; inset: 0; z-index: 30; background: var(--bg);
     display: none; align-items: center; justify-content: center; padding: 24px;
   }
   #lock.show { display: flex; }
-  #lockBox {
-    width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 12px;
-    background: var(--card); border: 1.5px solid var(--border); border-radius: 6px; padding: 20px;
-  }
-  #lockTitle { text-align: center; font-size: 1.1rem; }
-  #lockInput {
-    width: 100%; padding: 14px 10px; font-size: 1.6rem; text-align: center; letter-spacing: 0.3em;
-    font-family: inherit; background: var(--bg); color: var(--text);
-    border: 1.5px solid var(--border); border-radius: 6px; outline: none;
-  }
-  #lockInput:focus { border-color: var(--accent); }
-  #lockMsg { min-height: 1.2em; text-align: center; color: #ff7a7a; font-size: .9rem; }
-  #lockBar { display: flex; gap: 10px; }
-  #lockCancel, #lockOk {
-    flex: 1; padding: 12px 0; font-size: 1rem; border-radius: 6px;
-    border: 1.5px solid var(--border); background: var(--bg); color: var(--text);
-  }
-  #lockOk { background: var(--accent); border-color: var(--accent); color: #fff; }
+  #lockBox { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  #lockMsg { min-height: 1.2em; color: var(--accent); font-size: .85rem; letter-spacing: 0.2em; text-transform: uppercase; }
 
   /* ---------- Menu (after the right code) ---------- */
   #menu {
-    position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.88);
+    position: fixed; inset: 0; z-index: 35; background: var(--bg);
     display: none; align-items: center; justify-content: center; padding: 24px;
   }
   #menu.show { display: flex; }
-  #menuBox { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 12px; }
+  #menuBox { display: flex; flex-direction: column; align-items: center; gap: 34px; }
   #menuBox button {
-    padding: 18px 0; font-size: 1.3rem; letter-spacing: 0.04em;
-    background: var(--card); color: var(--text);
-    border: 1.5px solid var(--border); border-radius: 6px;
+    padding: 8px 0; font-size: 1.05rem; letter-spacing: 0.22em; text-transform: uppercase;
+    background: transparent; color: var(--text); border: none;
   }
-  #menuSecret { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
-  #menuClose { font-size: 1rem !important; padding: 12px 0 !important; color: var(--muted) !important; }
 
   /* ---------- Wrong-code popup ---------- */
   #busted {
@@ -117,24 +122,14 @@
   #bustedHint { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 0; right: 0; font-size: 1rem; opacity: .7; }
   /* ---------- Full lockout ---------- */
   #lockout {
-    position: fixed; inset: 0; z-index: 50; background: #0a0305; color: #fff;
+    position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--text);
     display: none; flex-direction: column; align-items: center; justify-content: center;
-    gap: 14px; padding: 32px; text-align: center;
+    gap: 22px; padding: 32px; text-align: center;
   }
   #lockout.show { display: flex; }
-  #loTitle { font-size: clamp(3rem, 16vw, 6rem); color: var(--accent); line-height: 1; }
-  #loSub { font-size: 1.2rem; opacity: .8; max-width: 300px; }
-  #loInput {
-    width: 100%; max-width: 220px; padding: 14px 10px; font-size: 1.6rem; text-align: center; letter-spacing: 0.3em;
-    font-family: inherit; background: var(--card); color: var(--text);
-    border: 1.5px solid var(--border); border-radius: 6px; outline: none;
-  }
-  #loInput:focus { border-color: var(--accent); }
-  #loMsg { min-height: 1.2em; color: #ff7a7a; font-size: 1rem; }
-  #loOk {
-    width: 100%; max-width: 220px; padding: 14px 0; font-size: 1.3rem; letter-spacing: 0.08em;
-    background: var(--accent); color: #fff; border: none; border-radius: 6px;
-  }
+  #loTitle { font-size: 1.1rem; letter-spacing: 0.5em; color: var(--accent); }
+  #loSub { max-width: 280px; line-height: 1.6; }
+  #loMsg { min-height: 1.2em; color: var(--accent); font-size: .85rem; letter-spacing: 0.2em; text-transform: uppercase; }
   @keyframes bustedShake {
     0%, 100% { transform: translateX(0); }
     20% { transform: translateX(-14px); }
@@ -214,31 +209,29 @@
 </div>
 
 <div id="lock">
+  <button id="lockCancel" class="xbtn" aria-label="Close">✕</button>
   <div id="lockBox">
-    <div id="lockTitle"></div>
-    <input id="lockInput" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+    <div id="lockTitle" class="label"></div>
+    <div class="prompt"><span>&gt;</span><input id="lockInput" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div>
     <div id="lockMsg"></div>
-    <div id="lockBar">
-      <button id="lockCancel">Cancel</button>
-      <button id="lockOk">OK</button>
-    </div>
+    <button id="lockOk" class="textbtn">OK</button>
   </div>
 </div>
 
 <div id="menu">
+  <button id="menuClose" class="xbtn" aria-label="Close">✕</button>
   <div id="menuBox">
-    <button id="menuEdit">Edit phrases</button>
+    <button id="menuEdit">MODIFY PENALTIES</button>
     <button id="menuSecret"></button>
-    <button id="menuClose">Close</button>
   </div>
 </div>
 
 <div id="lockout">
-  <div id="loTitle">LOCKED</div>
-  <div id="loSub">Five strikes, you're out. Enter the password or go stand in the corner.</div>
-  <input id="loInput" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+  <div id="loTitle" class="label">LOCKED</div>
+  <div id="loSub" class="label">Five strikes, you're out. Enter the password or go stand in the corner.</div>
+  <div class="prompt"><span>&gt;</span><input id="loInput" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div>
   <div id="loMsg"></div>
-  <button id="loOk">UNLOCK</button>
+  <button id="loOk" class="textbtn">UNLOCK</button>
 </div>
 
 <div id="busted">
@@ -253,8 +246,8 @@
 </div>
 
 <div id="editor">
-  <h2>Edit phrases</h2>
-  <p id="editHelp">One phrase per line. Line 1 = number 1, line 2 = number 2, and so on. Leave a line empty to skip a number.</p>
+  <h2>MODIFY PENALTIES</h2>
+  <p id="editHelp">One penalty per line. Line 1 = number 1, line 2 = number 2, and so on. Leave a line empty to skip a number.</p>
   <div id="editTabs"></div>
   <textarea id="lines" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
   <div id="count"></div>
@@ -321,7 +314,7 @@ function go() {
   }
   const list = data[current];
   if (!list.length) {
-    errEl.textContent = "No phrases in " + MODE_NAMES[current] + " yet.";
+    errEl.textContent = "No penalties in " + MODE_NAMES[current] + " yet.";
     return;
   }
   const text = (list[n - 1] || "").trim();
@@ -477,7 +470,10 @@ async function submitLockout() {
   }
 }
 $("loOk").onclick = submitLockout;
-loInput.addEventListener("input", () => { loInput.value = loInput.value.replace(/\D/g, ""); });
+loInput.addEventListener("input", () => {
+  loInput.value = loInput.value.replace(/\D/g, "");
+  if (loInput.value.length === 6) submitLockout();
+});
 loInput.addEventListener("keydown", e => { if (e.key === "Enter") submitLockout(); });
 if (isLockedOut()) engageLockout();
 $("busted").onclick = () => $("busted").classList.remove("show");
@@ -500,7 +496,7 @@ function applySecret() {
 }
 const menuEl = $("menu");
 function openMenu() {
-  $("menuSecret").textContent = secretOn() ? "Hide secret mode" : "Unlock secret mode";
+  $("menuSecret").textContent = secretOn() ? "HIDE SECRET MODE 😈" : "UNLOCK SECRET MODE 😈";
   menuEl.classList.add("show");
 }
 $("menuEdit").onclick = () => { menuEl.classList.remove("show"); openEditor(); };
@@ -515,7 +511,10 @@ applySecret();
 $("dots").onclick = openLock;
 $("lockCancel").onclick = closeLock;
 $("lockOk").onclick = submitLock;
-lockInput.addEventListener("input", () => { lockInput.value = lockInput.value.replace(/\D/g, ""); });
+lockInput.addEventListener("input", () => {
+  lockInput.value = lockInput.value.replace(/\D/g, "");
+  if (lockInput.value.length === 6) submitLock();
+});
 lockInput.addEventListener("keydown", e => { if (e.key === "Enter") submitLock(); });
 $("cancelBtn").onclick = () => editor.classList.remove("show");
 $("saveBtn").onclick = () => {
