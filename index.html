@@ -118,7 +118,9 @@
     padding: 32px; text-align: center;
   }
   #busted.show { display: flex; animation: bustedShake .4s; }
-  #bustedText { font-size: clamp(2.4rem, 11vw, 4.5rem); line-height: 1.15; }
+  #bustedBig { font-size: clamp(1.9rem, 9vw, 3.2rem); line-height: 1.15; font-weight: 700; }
+  #bustedSmall { margin-top: 22px; font-size: 1.05rem; line-height: 1.7; opacity: .9; }
+  #bustedSmall div + div { margin-top: 4px; }
   #bustedHint { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 0; right: 0; font-size: 1rem; opacity: .7; }
   /* ---------- Full lockout ---------- */
   #lockout {
@@ -129,6 +131,7 @@
   #lockout.show { display: flex; }
   #loTitle { font-size: 1.1rem; letter-spacing: 0.5em; color: var(--accent); }
   #loSub { max-width: 280px; line-height: 1.6; }
+  #loInput { width: 16ch; letter-spacing: 0.15em; font-size: 1.4rem; }
   #loMsg { min-height: 1.2em; color: var(--accent); font-size: .85rem; letter-spacing: 0.2em; text-transform: uppercase; }
   @keyframes bustedShake {
     0%, 100% { transform: translateX(0); }
@@ -163,37 +166,26 @@
   /* ---------- Edit screen ---------- */
   #editor {
     position: fixed; inset: 0; background: var(--bg); z-index: 20;
-    display: none; flex-direction: column;
-    padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
-    gap: 12px;
+    display: none; flex-direction: column; gap: 18px;
+    padding: calc(64px + env(safe-area-inset-top)) 22px calc(16px + env(safe-area-inset-bottom));
   }
   #editor.show { display: flex; }
-  #editor h2 { margin: 0; font-size: 1.2rem; }
-  #editHelp { margin: 0; color: var(--muted); font-size: .95rem; line-height: 1.35; }
-  #editTabs { display: flex; gap: 10px; }
+  #editTitle { text-align: center; }
+  #editHelp { margin: 0; color: var(--muted); font-size: .8rem; line-height: 1.6; text-align: center; }
+  #editTabs { display: flex; border-bottom: 1px solid var(--border); }
   .etab {
-    flex: 1; padding: 12px 0; font-size: 1.1rem; font-weight: 600;
-    background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 6px;
+    flex: 1; padding: 10px 0; font-size: 1.1rem; margin-bottom: -1px;
+    background: transparent; color: var(--text); opacity: .4;
+    border: none; border-bottom: 2px solid transparent; border-radius: 0;
   }
-  .etab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .etab.active { opacity: 1; border-bottom-color: var(--accent); }
   #lines {
-    flex: 1; width: 100%; padding: 14px; font-size: 1.05rem; line-height: 1.5;
-    background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 6px; outline: none; resize: none;
+    flex: 1; width: 100%; padding: 0; font-size: 1rem; line-height: 1.7; font-family: inherit;
+    background: transparent; color: var(--text);
+    border: none; outline: none; resize: none; border-radius: 0;
   }
-  #lines:focus { border-color: var(--accent); }
-  #count { color: var(--muted); font-size: .95rem; }
-  #editBar { display: flex; gap: 10px; }
-  #saveBtn {
-    flex: 2; padding: 16px 0; font-size: 1.2rem; font-weight: 700;
-    background: var(--accent); color: #fff; border: none; border-radius: 6px;
-  }
-  #cancelBtn {
-    flex: 1; padding: 16px 0; font-size: 1.1rem;
-    background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 6px;
-  }
+  #count { color: var(--muted); font-size: .8rem; letter-spacing: 0.2em; text-transform: uppercase; text-align: center; }
+  #saveBtn { align-self: center; }
 </style>
 </head>
 <body>
@@ -228,14 +220,17 @@
 
 <div id="lockout">
   <div id="loTitle" class="label">LOCKED</div>
-  <div id="loSub" class="label">Five strikes, you're out. Enter the password or go stand in the corner.</div>
-  <div class="prompt"><span>&gt;</span><input id="loInput" type="password" inputmode="numeric" autocomplete="off" maxlength="6"></div>
+  <div id="loSub" class="label">Five strikes, you're out.</div>
+  <div class="prompt"><span>&gt;</span><input id="loInput" type="password" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64"></div>
   <div id="loMsg"></div>
   <button id="loOk" class="textbtn">UNLOCK</button>
 </div>
 
 <div id="busted">
-  <div id="bustedText"></div>
+  <div id="bustedWrap">
+    <div id="bustedBig"></div>
+    <div id="bustedSmall"></div>
+  </div>
   <div id="bustedHint">tap to close</div>
 </div>
 
@@ -246,15 +241,13 @@
 </div>
 
 <div id="editor">
-  <h2>MODIFY PENALTIES</h2>
+  <button id="cancelBtn" class="xbtn" aria-label="Close">✕</button>
+  <div id="editTitle" class="label">MODIFY PENALTIES</div>
   <p id="editHelp">One penalty per line. Line 1 = number 1, line 2 = number 2, and so on. Leave a line empty to skip a number.</p>
   <div id="editTabs"></div>
   <textarea id="lines" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
   <div id="count"></div>
-  <div id="editBar">
-    <button id="cancelBtn">Cancel</button>
-    <button id="saveBtn">Save</button>
-  </div>
+  <button id="saveBtn" class="textbtn">SAVE</button>
 </div>
 
 <script>
@@ -375,6 +368,8 @@ function openEditor() {
 /* ---------- code lock ----------
    The code is not written in plain text here, only its fingerprint (hash). */
 const CODE_HASHES = ["59492ad92dbcb5f34317779b9051ae46a1a067aa9d55561c4f927a69604d809f", "x24290959"];
+/* Password for the locked-out screen: not written in plain text here, only its fingerprint. */
+const UNLOCK_HASHES = ["2afd9a87c9ddcc710b4b2715f663cca7bac1fae33b59944ec89d268152a141ad", "x1394368900"];
 const lockEl = $("lock"), lockTitle = $("lockTitle"), lockInput = $("lockInput"), lockMsg = $("lockMsg");
 
 async function hashCode(s) {
@@ -412,10 +407,14 @@ async function submitLock() {
 }
 /* Wrong attempts 1 to 4 show these lines. The 5th wrong attempt locks the whole page. */
 const BUSTED_LINES = [
-  "Nice try, snoop. Take a sip for that.",
-  "Again?! Two sips. Nobody likes a nosy neighbour.",
-  "Still at it? Finish your drink, you absolute menace.",
-  "Okay, you're officially unhinged. This time the penalty is one layer off. Your choice, socks don't count."
+  { big: "Nice try, snoop.",
+    small: ["Take a sip for that."] },
+  { big: "Again?!",
+    small: ["Two sips. Nobody likes a nosy neighbour."] },
+  { big: "Still at it?",
+    small: ["Finish your drink, you absolute menace."] },
+  { big: "Okay, you're officially unhinged.",
+    small: ["This time the penalty is one layer off.", "Your choice, socks don't count."] }
 ];
 const WRONG_KEY = "phrases-wrong-v1";
 const LOCKED_KEY = "phrases-locked-v1";
@@ -442,7 +441,14 @@ function showBusted() {
   const n = getWrong() + 1;
   setWrong(n);
   if (n > BUSTED_LINES.length) { engageLockout(); return; }
-  $("bustedText").textContent = BUSTED_LINES[n - 1];
+  const line = BUSTED_LINES[n - 1];
+  $("bustedBig").textContent = line.big;
+  $("bustedSmall").innerHTML = "";
+  line.small.forEach(t => {
+    const d = document.createElement("div");
+    d.textContent = t;
+    $("bustedSmall").appendChild(d);
+  });
   $("busted").classList.add("show");
 }
 
@@ -458,7 +464,7 @@ function engageLockout() {
   setTimeout(() => loInput.focus(), 50);
 }
 async function submitLockout() {
-  if (CODE_HASHES.includes(await hashCode(loInput.value))) {
+  if (UNLOCK_HASHES.includes(await hashCode(loInput.value))) {
     setLockedOut(false);
     resetWrong();
     loInput.blur();
@@ -470,10 +476,6 @@ async function submitLockout() {
   }
 }
 $("loOk").onclick = submitLockout;
-loInput.addEventListener("input", () => {
-  loInput.value = loInput.value.replace(/\D/g, "");
-  if (loInput.value.length === 6) submitLockout();
-});
 loInput.addEventListener("keydown", e => { if (e.key === "Enter") submitLockout(); });
 if (isLockedOut()) engageLockout();
 $("busted").onclick = () => $("busted").classList.remove("show");
