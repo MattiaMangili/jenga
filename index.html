@@ -91,6 +91,58 @@
   }
   #lockOk { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+  /* ---------- Menu (after the right code) ---------- */
+  #menu {
+    position: fixed; inset: 0; z-index: 35; background: rgba(0,0,0,.88);
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  #menu.show { display: flex; }
+  #menuBox { width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 12px; }
+  #menuBox button {
+    padding: 18px 0; font-size: 1.3rem; letter-spacing: 0.04em;
+    background: var(--card); color: var(--text);
+    border: 1.5px solid var(--border); border-radius: 6px;
+  }
+  #menuSecret { background: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+  #menuClose { font-size: 1rem !important; padding: 12px 0 !important; color: var(--muted) !important; }
+
+  /* ---------- Wrong-code popup ---------- */
+  #busted {
+    position: fixed; inset: 0; z-index: 40; background: var(--accent); color: #fff;
+    display: none; align-items: center; justify-content: center;
+    padding: 32px; text-align: center;
+  }
+  #busted.show { display: flex; animation: bustedShake .4s; }
+  #bustedText { font-size: clamp(2.4rem, 11vw, 4.5rem); line-height: 1.15; }
+  #bustedHint { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 0; right: 0; font-size: 1rem; opacity: .7; }
+  /* ---------- Full lockout ---------- */
+  #lockout {
+    position: fixed; inset: 0; z-index: 50; background: #0a0305; color: #fff;
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; padding: 32px; text-align: center;
+  }
+  #lockout.show { display: flex; }
+  #loTitle { font-size: clamp(3rem, 16vw, 6rem); color: var(--accent); line-height: 1; }
+  #loSub { font-size: 1.2rem; opacity: .8; max-width: 300px; }
+  #loInput {
+    width: 100%; max-width: 220px; padding: 14px 10px; font-size: 1.6rem; text-align: center; letter-spacing: 0.3em;
+    font-family: inherit; background: var(--card); color: var(--text);
+    border: 1.5px solid var(--border); border-radius: 6px; outline: none;
+  }
+  #loInput:focus { border-color: var(--accent); }
+  #loMsg { min-height: 1.2em; color: #ff7a7a; font-size: 1rem; }
+  #loOk {
+    width: 100%; max-width: 220px; padding: 14px 0; font-size: 1.3rem; letter-spacing: 0.08em;
+    background: var(--accent); color: #fff; border: none; border-radius: 6px;
+  }
+  @keyframes bustedShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-14px); }
+    40% { transform: translateX(14px); }
+    60% { transform: translateX(-10px); }
+    80% { transform: translateX(10px); }
+  }
+
   /* ---------- Full-screen phrase ---------- */
   #overlay {
     position: fixed; inset: 0; background: var(--bg);
@@ -173,6 +225,27 @@
   </div>
 </div>
 
+<div id="menu">
+  <div id="menuBox">
+    <button id="menuEdit">Edit phrases</button>
+    <button id="menuSecret"></button>
+    <button id="menuClose">Close</button>
+  </div>
+</div>
+
+<div id="lockout">
+  <div id="loTitle">LOCKED</div>
+  <div id="loSub">Five strikes, you're out. Enter the password or go stand in the corner.</div>
+  <input id="loInput" type="password" inputmode="numeric" autocomplete="off" maxlength="12">
+  <div id="loMsg"></div>
+  <button id="loOk">UNLOCK</button>
+</div>
+
+<div id="busted">
+  <div id="bustedText"></div>
+  <div id="bustedHint">tap to close</div>
+</div>
+
 <div id="overlay">
   <div id="tag"></div>
   <button id="close" aria-label="Close">✕</button>
@@ -193,7 +266,10 @@
 
 <script>
 /* Mode names. Change these if you like (keep the list short enough to fit on one row). */
-const MODE_NAMES = ["🌶️", "🌶️🌶️", "🌶️🌶️🌶️"];
+/* The 4th one is the secret mode. It stays hidden until it is unlocked from the menu. */
+const MODE_NAMES = ["🌶️", "🌶️🌶️", "🌶️🌶️🌶️", "😈"];
+const SECRET_INDEX = 3;
+const SECRET_KEY = "phrases-secret-v1";
 const MAX = 54;
 const KEY = "phrases-v1";
 
@@ -333,13 +409,109 @@ function closeLock() {
 }
 async function submitLock() {
   if (CODE_HASHES.includes(await hashCode(lockInput.value))) {
+    resetWrong();
     closeLock();
-    openEditor();
+    openMenu();
   } else {
-    lockMsg.textContent = "Wrong code";
-    lockInput.value = "";
+    closeLock();
+    showBusted();
   }
 }
+/* Wrong attempts 1 to 4 show these lines. The 5th wrong attempt locks the whole page. */
+const BUSTED_LINES = [
+  "Nice try, snoop. Take a sip for that.",
+  "Again?! Two sips. Nobody likes a nosy neighbour.",
+  "Still at it? Finish your drink, you absolute menace.",
+  "Okay, you're officially unhinged. This time the penalty is one layer off. Your choice, socks don't count."
+];
+const WRONG_KEY = "phrases-wrong-v1";
+const LOCKED_KEY = "phrases-locked-v1";
+let lockedMem = false;
+
+function getWrong() {
+  try { return parseInt(localStorage.getItem(WRONG_KEY), 10) || 0; } catch (e) { return wrongMem; }
+}
+let wrongMem = 0;
+function setWrong(n) {
+  wrongMem = n;
+  try { localStorage.setItem(WRONG_KEY, String(n)); } catch (e) {}
+}
+function isLockedOut() {
+  try { return localStorage.getItem(LOCKED_KEY) === "1"; } catch (e) { return lockedMem; }
+}
+function setLockedOut(v) {
+  lockedMem = v;
+  try { if (v) localStorage.setItem(LOCKED_KEY, "1"); else localStorage.removeItem(LOCKED_KEY); } catch (e) {}
+}
+function resetWrong() { setWrong(0); }
+
+function showBusted() {
+  const n = getWrong() + 1;
+  setWrong(n);
+  if (n > BUSTED_LINES.length) { engageLockout(); return; }
+  $("bustedText").textContent = BUSTED_LINES[n - 1];
+  $("busted").classList.add("show");
+}
+
+/* ---------- full lockout ---------- */
+const lockoutEl = $("lockout"), loInput = $("loInput"), loMsg = $("loMsg");
+function engageLockout() {
+  setLockedOut(true);
+  $("busted").classList.remove("show");
+  closeLock();
+  loInput.value = "";
+  loMsg.textContent = "";
+  lockoutEl.classList.add("show");
+  setTimeout(() => loInput.focus(), 50);
+}
+async function submitLockout() {
+  if (CODE_HASHES.includes(await hashCode(loInput.value))) {
+    setLockedOut(false);
+    resetWrong();
+    loInput.blur();
+    loInput.value = "";
+    lockoutEl.classList.remove("show");
+  } else {
+    loMsg.textContent = "Wrong password";
+    loInput.value = "";
+  }
+}
+$("loOk").onclick = submitLockout;
+loInput.addEventListener("input", () => { loInput.value = loInput.value.replace(/\D/g, ""); });
+loInput.addEventListener("keydown", e => { if (e.key === "Enter") submitLockout(); });
+if (isLockedOut()) engageLockout();
+$("busted").onclick = () => $("busted").classList.remove("show");
+/* ---------- menu and secret mode ---------- */
+function secretOn() {
+  try { return localStorage.getItem(SECRET_KEY) === "1"; } catch (e) { return secretMem; }
+}
+let secretMem = false;
+function setSecret(v) {
+  secretMem = v;
+  try { if (v) localStorage.setItem(SECRET_KEY, "1"); else localStorage.removeItem(SECRET_KEY); } catch (e) {}
+}
+function applySecret() {
+  const on = secretOn();
+  modesEl.children[SECRET_INDEX].style.display = on ? "" : "none";
+  if (!on && current === SECRET_INDEX) {
+    current = 0;
+    [...modesEl.children].forEach((c, j) => c.classList.toggle("active", j === 0));
+  }
+}
+const menuEl = $("menu");
+function openMenu() {
+  $("menuSecret").textContent = secretOn() ? "Hide secret mode" : "Unlock secret mode";
+  menuEl.classList.add("show");
+}
+$("menuEdit").onclick = () => { menuEl.classList.remove("show"); openEditor(); };
+$("menuSecret").onclick = () => {
+  setSecret(!secretOn());
+  applySecret();
+  menuEl.classList.remove("show");
+};
+$("menuClose").onclick = () => menuEl.classList.remove("show");
+applySecret();
+
 $("dots").onclick = openLock;
 $("lockCancel").onclick = closeLock;
 $("lockOk").onclick = submitLock;
