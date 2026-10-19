@@ -148,10 +148,10 @@
     padding: 80px 24px 24px; z-index: 10;
   }
   #overlay.show { display: flex; }
-  #phrase {
-    font-size: clamp(2rem, 9vw, 4.5rem); font-weight: 700;
-    text-align: center; line-height: 1.2; word-break: break-word;
-  }
+  #phrase { text-align: center; word-break: break-word; width: 100%; }
+  #phraseBig { font-size: clamp(1.9rem, 9vw, 3.2rem); font-weight: 700; line-height: 1.2; }
+  #phraseSmall { margin-top: 22px; font-size: 1.05rem; line-height: 1.7; opacity: .85; }
+  #phraseSmall div + div { margin-top: 4px; }
   #close {
     position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px;
     width: 52px; height: 52px; font-size: 1.8rem; line-height: 1;
@@ -237,13 +237,16 @@
 <div id="overlay">
   <div id="tag"></div>
   <button id="close" aria-label="Close">✕</button>
-  <div id="phrase"></div>
+  <div id="phrase">
+    <div id="phraseBig"></div>
+    <div id="phraseSmall"></div>
+  </div>
 </div>
 
 <div id="editor">
   <button id="cancelBtn" class="xbtn" aria-label="Close">✕</button>
   <div id="editTitle" class="label">MODIFY PENALTIES</div>
-  <p id="editHelp">One penalty per line. Line 1 = number 1, line 2 = number 2, and so on. Leave a line empty to skip a number.</p>
+  <p id="editHelp">One penalty per line. Line 1 = number 1, line 2 = number 2, and so on. Leave a line empty to skip a number. Use | to split the big headline from the small lines under it.</p>
   <div id="editTabs"></div>
   <textarea id="lines" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
   <div id="count"></div>
@@ -257,24 +260,85 @@ const MODE_NAMES = ["🌶️", "🌶️🌶️", "🌶️🌶️🌶️", "😈"
 const SECRET_INDEX = 3;
 const SECRET_KEY = "phrases-secret-v1";
 const MAX = 54;
-const KEY = "phrases-v1";
+const KEY = "phrases-v2";
+const DEFAULTS = [
+  /* Level 1 (🌶️). One entry per line. Use | to split the headline from the small lines. */
+  [
+    "Cin cin! 🥂 | Lancia un dado per scoprire quanti sorsi ti toccano.",
+    "Lancia un dado e bevi quanti sorsi escono. | Dai la colpa alla torre, non a me.",
+    "Lancia un dado per sapere quanti sorsi puoi distribuire. | Scegli con cura a chi darli.",
+    "Distribuisci 3 sorsi. | Spargi amore, o dolore.",
+    "Bevi 1 shot. 🥃 | Fa bene al carattere.",
+    "Distribuisci 1 shot. 🥃 | Puoi scegliere anche te stesso, non giudico.",
+    "1 shot per tutti. | Cin cin!",
+    "Mystery shot! 🥃 | Lasciati sorprendere!",
+    "Bevi 1 sorso e gioca ancora. | La torre non ha finito con te.",
+    "Bevi 2 sorsi e gioca ancora. | Non è il tuo giorno fortunato.",
+    "Bottoms up, svuota il bicchiere! | Sì, tutto.",
+    "Gara di sguardi. 👁️👁️ | 4 sorsi per chi perde.",
+    "Ride the bus! 🚌 | Qualcuno è nei guai...",
+    "Body shot. 😏",
+    "Cin cin! 🥂 | Brindate insieme.",
+    "Togliti i pantaloni. 🩲😏 | O qualsiasi indumento tu stia indossando sopra le mutande.",
+    "Togliti la maglietta. 👕 | Rendilo drammatico. Se indossi una felpa, togli invece quella.",
+    "Togliti un indumento. | Le calze non contano. Nice try!",
+    "Togliti un indumento. | Le calze non contano. Nice try!",
+    "Scegli cosa deve togliersi il tuo partner.",
+    "Scegli un indumento che il tuo partner deve indossare. | Fai lavorare la fantasia.",
+    "Scambiatevi i top. | Se la taglia non lo permette, condividete 3 sorsi.",
+    "Prossimo turno a occhi bendati. | Buona fortuna, ti servirà.",
+    "Imbocca l'altra persona con un dolce. | Senza usare le mani.",
+    "Obbligo o verità! | Spera che il tuo partner si senta gentile oggi!",
+    "Due verità e una bugia. | 3 sorsi di consolazione per chi perde.",
+    "Selfie time! 📸",
+    "Inventa una nuova regola.",
+    "Nel prossimo turno puoi usare solo la mano debole. | Oppure i piedi, a scelta tua. Yoga people have the edge.",
+    "Braccia da T-Rex per il prossimo turno. 🦖",
+    "Gioca ancora.",
+    "Immunità per un turno. | Solo al prossimo giro. Gli dei della penitenza guardano altrove.",
+    "Esci gratis di prigione.  ⛓️‍👮‍♂️ | Valido solo per il prossimo turno. Goditela finché dura.",
+    "Niente, buuu!",
+    "Niente, buuu!",
+    "È il tuo turno fortunato. | Nessuna penitenza, sorridi.",
+    "Niente. | La torre è di buon umore.",
+    "Dedica o ricevi un massaggio ai piedi.  🦶🏼",
+    "Hai pieno controllo sulle orecchie del tuo partner per 30 secondi. 👂🏼 | Divertiti.",
+    "Bacini sul collo. 💋 | Il dado a 20 facce decide quanti.",
+    "Fai un massaggio. | O grattini, scegli tu.",
+    "Qual è la cosa che ti è piaciuta di più in questa mini-vacanza finora?"
+  ],
+  [],
+  [],
+  []
+];
 
-/* ---------- storage (only on this device) ---------- */
-let data = MODE_NAMES.map(() => []);
+
+/* ---------- storage (only on this device) ----------
+   Built-in lists (DEFAULTS above) are used until you edit a mode on this phone.
+   Only edited modes are stored; untouched modes always follow the built-in list. */
+let saved = MODE_NAMES.map(() => null);   // null = use the built-in list
+let data = MODE_NAMES.map((_, i) => DEFAULTS[i].slice());
+function resolveData() {
+  data = MODE_NAMES.map((_, i) => saved[i] === null ? DEFAULTS[i].slice() : saved[i]);
+}
 function load() {
   try {
     const raw = localStorage.getItem(KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) {
-        data = MODE_NAMES.map((_, i) => Array.isArray(parsed[i]) ? parsed[i] : []);
+        saved = MODE_NAMES.map((_, i) => Array.isArray(parsed[i]) ? parsed[i] : null);
       }
     }
   } catch (e) {}
+  resolveData();
 }
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(data)); return true; }
+  try { localStorage.setItem(KEY, JSON.stringify(saved)); return true; }
   catch (e) { return false; }
+}
+function sameList(a, b) {
+  return a.length === b.length && a.every((x, i) => x === b[i]);
 }
 load();
 
@@ -318,7 +382,14 @@ function go() {
   errEl.textContent = "";
   numEl.blur();
   tagEl.textContent = MODE_NAMES[current] + " · " + n;
-  phraseEl.textContent = text;
+  const parts = text.split("|").map(t => t.trim()).filter(Boolean);
+  $("phraseBig").textContent = parts[0] || "";
+  $("phraseSmall").innerHTML = "";
+  parts.slice(1).forEach(t => {
+    const d = document.createElement("div");
+    d.textContent = t;
+    $("phraseSmall").appendChild(d);
+  });
   overlay.classList.add("show");
 }
 function closeOverlay() {
@@ -521,10 +592,12 @@ lockInput.addEventListener("keydown", e => { if (e.key === "Enter") submitLock()
 $("cancelBtn").onclick = () => editor.classList.remove("show");
 $("saveBtn").onclick = () => {
   draft[editing] = linesEl.value;
-  data = draft.map(text => {
+  saved = draft.map((text, i) => {
     const lines = text.replace(/\s+$/, "").split(/\r?\n/).map(s => s.trim());
-    return text.trim() ? lines.slice(0, MAX) : [];
+    const list = text.trim() ? lines.slice(0, MAX) : [];
+    return sameList(list, DEFAULTS[i]) ? null : list;
   });
+  resolveData();
   if (!save()) {
     alert("Could not save on this device. Check that private browsing is off.");
     return;
