@@ -145,23 +145,14 @@
   #overlay {
     position: fixed; inset: 0; background: var(--bg);
     display: none; align-items: center; justify-content: center;
-    padding: 80px 24px 24px; z-index: 10;
+    padding: 40px 24px 70px; z-index: 10;
   }
   #overlay.show { display: flex; }
   #phrase { text-align: center; word-break: break-word; width: 100%; }
-  #phraseBig { font-size: clamp(1.9rem, 9vw, 3.2rem); font-weight: 700; line-height: 1.2; }
+  #phraseBig { font-size: clamp(1.7rem, 8vw, 2.8rem); font-weight: 700; line-height: 1.2; }
   #phraseSmall { margin-top: 22px; font-size: 1.05rem; line-height: 1.7; opacity: .85; }
   #phraseSmall div + div { margin-top: 4px; }
-  #close {
-    position: absolute; top: calc(14px + env(safe-area-inset-top)); right: 14px;
-    width: 52px; height: 52px; font-size: 1.8rem; line-height: 1;
-    background: var(--card); color: var(--text);
-    border: 2px solid var(--border); border-radius: 6px;
-  }
-  #tag {
-    position: absolute; top: calc(26px + env(safe-area-inset-top)); left: 20px;
-    font-size: 1rem; opacity: .6;
-  }
+  #phraseHint { position: absolute; bottom: calc(24px + env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; font-size: 1rem; opacity: .7; }
 
   /* ---------- Edit screen ---------- */
   #editor {
@@ -235,12 +226,11 @@
 </div>
 
 <div id="overlay">
-  <div id="tag"></div>
-  <button id="close" aria-label="Close">✕</button>
   <div id="phrase">
     <div id="phraseBig"></div>
     <div id="phraseSmall"></div>
   </div>
+  <div id="phraseHint">tap to close</div>
 </div>
 
 <div id="editor">
@@ -345,7 +335,7 @@ load();
 /* ---------- elements ---------- */
 const $ = id => document.getElementById(id);
 const modesEl = $("modes"), numEl = $("num"), errEl = $("err");
-const overlay = $("overlay"), phraseEl = $("phrase"), tagEl = $("tag");
+const overlay = $("overlay"), phraseEl = $("phrase");
 const editor = $("editor"), editTabs = $("editTabs"), linesEl = $("lines"), countEl = $("count");
 
 let current = 0;
@@ -381,9 +371,10 @@ function go() {
   }
   errEl.textContent = "";
   numEl.blur();
-  tagEl.textContent = MODE_NAMES[current] + " · " + n;
   const parts = text.split("|").map(t => t.trim()).filter(Boolean);
-  $("phraseBig").textContent = parts[0] || "";
+  // headline: drop single periods at the end of a sentence (keep ! ? and ...)
+  const headline = (parts[0] || "").replace(/(\.+)(?=\s|$)/g, m => m.length === 1 ? "" : m).trim();
+  $("phraseBig").textContent = headline;
   $("phraseSmall").innerHTML = "";
   parts.slice(1).forEach(t => {
     const d = document.createElement("div");
@@ -397,7 +388,7 @@ function closeOverlay() {
   numEl.value = "";
 }
 $("go").onclick = go;
-$("close").onclick = closeOverlay;
+overlay.onclick = closeOverlay;
 numEl.addEventListener("input", () => { numEl.value = numEl.value.replace(/\D/g, ""); });
 numEl.addEventListener("keydown", e => { if (e.key === "Enter") go(); });
 
@@ -483,8 +474,8 @@ const BUSTED_LINES = [
   { big: "Again?!",
     small: ["Two sips. Nobody likes a nosy neighbour."] },
   { big: "Still at it?",
-    small: ["Finish your drink, you absolute menace."] },
-  { big: "Okay, you're officially unhinged.",
+    small: ["Finish your drink. Persistence deserves a toast."] },
+  { big: "Well, well, well.",
     small: ["This time the penalty is one layer off.", "Your choice, socks don't count."] }
 ];
 const WRONG_KEY = "phrases-wrong-v1";
